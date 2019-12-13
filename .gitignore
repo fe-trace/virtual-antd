@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+.idea
+.DS_Store
+.svn
+.vscode
+i18n-locales
+package-lock.json

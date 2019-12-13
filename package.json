@@ -1,0 +1,57 @@
+{
+  "name": "site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=development node ./demo/test.js",
+    "debug": "cross-env DEBUG='1' node ./demo/debug.js",
+    "dev": "webpack-dev-server --config=webpack.config.dev.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fe-trace/site.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fe-trace/site/issues"
+  },
+  "homepage": "https://github.com/fe-trace/site#readme",
+  "devDependencies": {
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/preset-react": "^7.6.3",
+    "@babel/runtime": "^7.6.3",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-import": "^1.12.2",
+    "babel-register": "^6.26.0",
+    "css-loader": "^3.2.0",
+    "file-loader": "^4.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "lodash": "^4.17.15",
+    "mini-css-extract-plugin": "^0.8.0",
+    "style-loader": "^1.0.0",
+    "url-loader": "^2.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0"
+  },
+  "dependencies": {
+    "antd": "^3.26.2",
+    "classnames": "^2.2.6",
+    "cross-env": "^6.0.3",
+    "editor.md": "^1.5.0",
+    "json-loader": "^0.5.7",
+    "less": "^3.10.3",
+    "less-loader": "^5.0.0",
+    "markdown": "^0.5.0",
+    "moment": "^2.24.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
+    "showdown": "^1.9.1"
+  }
+}
