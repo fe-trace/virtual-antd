@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fe-trace/site.git"
+    "url": "git+https://github.com/fe-trace/virtual-antd.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/fe-trace/site/issues"
+    "url": "https://github.com/fe-trace/virtual-antd/issues"
   },
-  "homepage": "https://github.com/fe-trace/site#readme",
+  "homepage": "https://github.com/fe-trace/virtual-antd#readme",
   "devDependencies": {
     "@babel/core": "^7.6.4",
     "@babel/plugin-transform-runtime": "^7.6.2",
@@ -52,6 +52,7 @@
     "react-dom": "^16.12.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
+    "react-virtualized": "^9.21.2",
     "showdown": "^1.9.1"
   }
 }

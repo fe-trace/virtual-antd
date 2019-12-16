@@ -1,0 +1,30 @@
+.sm-select-item {
+    line-height: 26px;
+
+    .ic-expand {
+        margin: 0 4px;
+        cursor: pointer;
+    }
+
+    .select-item {
+        .ic-checkbox {
+            margin-right: 4px;
+        }
+
+        .text {
+            padding: 0 4px;
+            cursor: pointer;
+        }
+
+        &.selected, &:hover {
+            .text {
+                background: #bae7ff;
+            }
+        }
+
+        &.disabled {
+            color: rgba(0,0,0,0.25);
+            cursor: not-allowed;
+        }
+    }
+}
