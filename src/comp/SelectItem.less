@@ -2,7 +2,9 @@
     line-height: 26px;
 
     .ic-expand {
+        display: inline-block;
         margin: 0 4px;
+        width: 14px;
         cursor: pointer;
     }
 
@@ -12,19 +14,22 @@
         }
 
         .text {
-            padding: 0 4px;
+            margin: 0 4px;
             cursor: pointer;
         }
 
-        &.selected, &:hover {
+        &:hover {
             .text {
                 background: #bae7ff;
             }
         }
 
         &.disabled {
-            color: rgba(0,0,0,0.25);
-            cursor: not-allowed;
+            .text {
+                color: rgba(0,0,0,0.25);
+                background: #fff;
+                cursor: not-allowed;
+            }
         }
     }
 }
