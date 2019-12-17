@@ -37,19 +37,21 @@ function Dropdown(props) {
             style={{ paddingLeft: data.level * 18 }}
         >
             <span className="ic-expand">
-                { (data.children && data.children.length) && (
-                    status === nodeStatus.fold && (
-                        <Icon 
-                            type="minus-circle" 
-                            onClick={ handleUnFold } 
-                        />
-                    ) || (
-                        <Icon 
-                            type="plus-circle" 
-                            onClick={ handleFold } 
-                        />
-                    )
-                ) }
+                { 
+                    (data.children && data.children.length) && (
+                        status === nodeStatus.fold && (
+                            <Icon 
+                                type="minus-circle" 
+                                onClick={ handleUnFold } 
+                            />
+                        ) || (
+                            <Icon 
+                                type="plus-circle" 
+                                onClick={ handleFold } 
+                            />
+                        )
+                    ) 
+                }
             </span>
             <span className={itemCls}>
                 {

@@ -41,7 +41,7 @@ function VirtualList(props) {
                     <VList
                         height={height}
                         rowCount={list.length}
-                        rowHeight={26}
+                        rowHeight={28}
                         rowRenderer={_rowRenderer}
                         width={width}
                     />

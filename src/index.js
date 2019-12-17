@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { render } from 'react-dom';
+import { Input } from 'antd';
 import Selector from './comp/Selector.js';
 import Dropdown from './comp/Dropdown.js';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus } from './comp/constant.js';
+import './index.less';
 
-const data = new Array(100).fill(0).map(function(item, index) {
+const data = new Array(10).fill(0).map(function(item, index) {
     return {
         key: `g-${index}`,
         label: `grande-${index}`
     }
 });
 data.map(function(item, gIndex) {
-    item.children = new Array(100).fill(0).map(function(item, index) {
+    item.children = new Array(10).fill(0).map(function(item, index) {
         return {
             key: `p-${gIndex}-${index}`,
             label: `parent-${index}`
@@ -28,6 +30,12 @@ data.map(function(item, gIndex) {
         });
     });
 });
+function loadData(node) {
+    return Promise.resolve([{
+        label: 'abc',
+        key: 'abc'
+    }])
+}
 // 数据扁平集合，根据节点等级保存数据
 let flatMap = {};
 function treeToList(data, expandStatus) {
@@ -100,14 +108,10 @@ function loopParentNode(node, checkStatus, checked) {
     }
     const bNodes = pNode.children;
     let checkAll = true, hasCheck = false;
+    // 判断所有子节点是否全选或者存在半选
     for(let i=0,len=bNodes.length; i<len; i++) {
         const bNode = bNodes[i];
         const state = checkStatus[bNode.key];
-
-        // 当前节点直接返回
-        if(bNode.key === node.key) {
-            continue;
-        }
 
         // 节点未选中
         if(!state) {
@@ -196,7 +200,7 @@ function Layout(props) {
 
         if(!state) {
             selectNode(node, false);
-        } else if(state.checked) {
+        } else if(state.checked && !state.indeterminate) {
             selectNode(node, true);
         }
     };
@@ -206,7 +210,7 @@ function Layout(props) {
         setCheckStatus({...newCheckStatus});
     };
     const config = {
-        width: "200px",
+        width: "400px",
         allowClear: false,
         showExpander: true,
         checkable: true,
@@ -214,7 +218,8 @@ function Layout(props) {
         checkStatus: checkStatus,
         expandStatus: expandStatus,
         expandNode: expandNode,
-        selectNode: selectNode
+        selectNode: selectNode,
+        loadData: loadData
     };
 
     useEffect(function() {
@@ -237,6 +242,9 @@ function Layout(props) {
                 { 
                     visible && (
                         <Dropdown>
+                            <div className="search-area">
+                                <Input.Search />
+                            </div>
                             <VirtualList
                                 list={list}
                             />
