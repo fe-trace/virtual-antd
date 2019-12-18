@@ -5,7 +5,7 @@ import Selector from './comp/Selector.js';
 import Dropdown from './comp/Dropdown.js';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
-import { nodeStatus } from './comp/constant.js';
+import { nodeStatus, loadStatus } from './comp/constant.js';
 import './index.less';
 
 const data = new Array(10).fill(0).map(function(item, index) {
@@ -15,27 +15,21 @@ const data = new Array(10).fill(0).map(function(item, index) {
     }
 });
 data.map(function(item, gIndex) {
-    item.children = new Array(10).fill(0).map(function(item, index) {
-        return {
-            key: `p-${gIndex}-${index}`,
-            label: `parent-${index}`
-        }
-    });
-    item.children.map(function(item, pIndex) {
-        item.children = new Array(10).fill(0).map(function(item, index) {
-            return {
-                key: `c-${gIndex}-${pIndex}-${index}`,
-                label: `children-${index}`
-            }
-        });
-    });
+    // item.children = new Array(10).fill(0).map(function(item, index) {
+    //     return {
+    //         key: `p-${gIndex}-${index}`,
+    //         label: `parent-${index}`
+    //     }
+    // });
+    // item.children.map(function(item, pIndex) {
+    //     item.children = new Array(10).fill(0).map(function(item, index) {
+    //         return {
+    //             key: `c-${gIndex}-${pIndex}-${index}`,
+    //             label: `children-${index}`
+    //         }
+    //     });
+    // });
 });
-function loadData(node) {
-    return Promise.resolve([{
-        label: 'abc',
-        key: 'abc'
-    }])
-}
 // 数据扁平集合，根据节点等级保存数据
 let flatMap = {};
 function treeToList(data, expandStatus) {
@@ -44,7 +38,8 @@ function treeToList(data, expandStatus) {
     const source = data.map(item => ({
         ...item,
         level: 0,
-        parent: null
+        parent: null,
+        dataRef: item
     }));
     flatMap[0] = [...source];
     
@@ -57,7 +52,8 @@ function treeToList(data, expandStatus) {
             const children = node.children.map(item => ({
                 ...item,
                 level: level,
-                parent: node.key
+                parent: node.key,
+                dataRef: item
             }));
             flatMap[level] = flatMap[level] || [];
             flatMap[level].push(...Object.assign(children));
@@ -66,7 +62,7 @@ function treeToList(data, expandStatus) {
     }
     return list;
 }
-function loopChildNode(node, checkStatus, checked) {
+function loopChildNode(node, checkStatus, checked, checkStrictly) {
     // 递归子节点设置状态
     const list = [node];
 
@@ -85,7 +81,7 @@ function loopChildNode(node, checkStatus, checked) {
         }
     }
 }
-function loopParentNode(node, checkStatus, checked) {
+function loopParentNode(node, checkStatus, checked, checkStrictly) {
     // 递归父节点设置状态
     const pId = node.parent;
     if(!pId) {
@@ -148,7 +144,7 @@ function loopParentNode(node, checkStatus, checked) {
     // 设置父节点的父节点选中效果
     loopParentNode(pNode, checkStatus, checked);
 }
-function handleNodeStatus(node, checkStatus, checked) {
+function handleNodeStatus(node, checkStatus, checked, checkStrictly) {
     /**
      * 处理节点的选中状态
      * 选中节点：
@@ -164,28 +160,47 @@ function handleNodeStatus(node, checkStatus, checked) {
      * 2.节点无父节点：
      *  a.递归节点的子节点设置节点不选中状态
     */
-    // if(checked && node.parent) {
-    // } else if(checked && !node.parent) {
-    // } else if(!checked && node.parent) {
-    // } else {
-    // }
-    loopChildNode(node, checkStatus, checked);
-    loopParentNode(node, checkStatus, checked)
+    loopChildNode(node, checkStatus, checked, checkStrictly);
+    loopParentNode(node, checkStatus, checked, checkStrictly)
     return checkStatus;
 }
-function Layout(props) {
+function VirtualSelect(props) {
     const [ checkStatus, setCheckStatus ] = useState({});
     const [ expandStatus, setExpandStatus ] = useState({});
+    const [ loadedStatus, setLoadedStatus ] = useState({});
     const [ list, setList] = useState([]);
     const [ visible, setVisible ] = useState(false);
+    const { data, loadData, checkable=false, multiple=false } = props;
+    const asyncLoad = !!loadData;
     const onToggle = function(state) {
         setVisible(state != void 0 ? state : !visible);
     };
     const closeDropPanel = useCallback(function() {
         setVisible(false);
     }, []);
+    const toggleLoadingState = function(node, state) {
+        if(state) {
+            loadedStatus[node.key] = state;
+        } else {
+            delete loadedStatus[node.key];
+        }
+        setLoadedStatus({...loadedStatus});
+    };
+    const asyncLoadNode = function(node) {
+        toggleLoadingState(node, loadStatus.loading);
+        loadData && loadData(node).then(() => {
+            toggleLoadingState(node, loadStatus.loaded);
+            handleSelectNode(node.dataRef);
+        }).catch(e => {
+            toggleLoadingState(node, false);
+        });
+    };
     const expandNode = function(node, status) {
+        // 同步加载
         // 展开节点：设置节点展开样式，添加展开节点对应的子节点到显示列表中
+        // 闭合节点：设置节点闭合样式，在显示列表中移除闭合几点对应的子节点
+        // 异步加载
+        // 展开加点：加载节点下子节点，设置节点展开样式，添加展开节点对应的子节点到显示列表中
         // 闭合节点：设置节点闭合样式，在显示列表中移除闭合几点对应的子节点
         if(status === nodeStatus.unfold) {
             delete expandStatus[node.key];
@@ -193,9 +208,21 @@ function Layout(props) {
             expandStatus[node.key] = status;
         }
         setExpandStatus({...expandStatus});
-        handleSelectNode(node);
+        if(asyncLoad) {
+            const status = loadedStatus[node.key];
+            if(status === nodeStatus.unfold || status === loadStatus.loaded) {
+                return;
+            }
+            asyncLoadNode(node);
+        } else {
+            handleSelectNode(node);
+        }
     };
     const handleSelectNode = function(node) {
+        // 非 checkbox 模式不递归记录选中状态
+        if(!checkable || !multiple) {
+            return
+        }
         const state = checkStatus[node.key];
 
         if(!state) {
@@ -213,19 +240,21 @@ function Layout(props) {
         width: "400px",
         allowClear: false,
         showExpander: true,
-        checkable: true,
+        multiple: multiple,
+        checkable: checkable,
         visible: visible,
         checkStatus: checkStatus,
         expandStatus: expandStatus,
+        loadedStatus: loadedStatus,
         expandNode: expandNode,
         selectNode: selectNode,
-        loadData: loadData
+        asyncLoad: asyncLoad
     };
 
     useEffect(function() {
         // 从展示列表中添加或移除对应节点的子节点
         setList(treeToList(data, expandStatus));
-    }, [expandStatus]);
+    }, [expandStatus, data]);
     useEffect(function() {
         document.addEventListener("click", closeDropPanel);
         return function() {
@@ -255,4 +284,33 @@ function Layout(props) {
         </div>
     );
 }
+function Layout(props) {
+    const [ list, setData ] = useState(data);
+    function loadData(node) {
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                if(/^p/.test(node.key) && false) {
+
+                } else {
+                    node.dataRef.children = new Array(10).fill(0).map(function(item, index) {
+                        return {
+                            key: `p-${node.key}-${index}`,
+                            label: `parent-${index}`
+                        }
+                    });
+                }
+                setData([...list]);
+                resolve();
+            }, 1000);
+        });
+    }
+    return (
+        <VirtualSelect 
+            data={list} 
+            // checkable={true}
+            loadData={loadData} 
+        />
+    );
+}
+
 render(<Layout />, document.body);

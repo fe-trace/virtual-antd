@@ -13,7 +13,7 @@ const config = {
         compress: true,
         contentBase: path.join(__dirname, "dist"),
     },
-    devtool: 'cheap-eval-source-map',
+    devtool: 'source-map',
     entry: {
     	index: './src/index.js',
     },
