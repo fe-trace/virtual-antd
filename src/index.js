@@ -46,16 +46,20 @@ function Layout(props) {
         });
     }
     return (
-        // <VirtualSelect 
-        //     data={list} 
-        //     checkable={true}
-        //     loadData={loadData} 
-        // />
-        <div style={{ margin: '20px', width: '200px' }}>
-            <DropDown>
-                <div>abc</div>
-            </DropDown>
+        <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
+            <VirtualSelect 
+                data={list} 
+                single={true}
+                cascade={false}
+                checkable={true}
+                loadData={loadData} 
+            />
         </div>
+        // <div style={{ margin: '20px', width: '300px' }}>
+        //     <DropDown>
+        //         <div>abc</div>
+        //     </DropDown>
+        // </div>
     );
 }
 

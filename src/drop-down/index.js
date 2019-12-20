@@ -38,7 +38,11 @@ function Dropdown(props) {
                             width: props.width || null
                         }}
                     >
-                        { props.children }
+                        { 
+                            React.cloneElement(props.children, {
+                                closeDropPanel: closeDropPanel
+                            }) 
+                        }
                     </div>
                 )
             }

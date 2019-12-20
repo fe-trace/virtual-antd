@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Input } from 'antd';
-import Selector from './comp/Selector.js';
-import Dropdown from './comp/Dropdown.js';
+import React, { useState, useEffect } from 'react';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus, loadStatus } from './comp/constant.js';
@@ -39,7 +36,7 @@ function treeToList(data, expandStatus) {
     }
     return list;
 }
-function loopChildNode(node, checkStatus, checked, checkStrictly) {
+function loopChildNode(node, checkStatus, checked) {
     // 递归子节点设置状态
     const list = [node];
 
@@ -58,7 +55,7 @@ function loopChildNode(node, checkStatus, checked, checkStrictly) {
         }
     }
 }
-function loopParentNode(node, checkStatus, checked, checkStrictly) {
+function loopParentNode(node, checkStatus, checked) {
     // 递归父节点设置状态
     const pId = node.parent;
     if(!pId) {
@@ -121,7 +118,7 @@ function loopParentNode(node, checkStatus, checked, checkStrictly) {
     // 设置父节点的父节点选中效果
     loopParentNode(pNode, checkStatus, checked);
 }
-function handleNodeStatus(node, checkStatus, checked, checkStrictly) {
+function handleNodeStatus(node, checkStatus, checked, cascade) {
     /**
      * 处理节点的选中状态
      * 选中节点：
@@ -137,8 +134,18 @@ function handleNodeStatus(node, checkStatus, checked, checkStrictly) {
      * 2.节点无父节点：
      *  a.递归节点的子节点设置节点不选中状态
     */
-    loopChildNode(node, checkStatus, checked, checkStrictly);
-    loopParentNode(node, checkStatus, checked, checkStrictly)
+    if(cascade) {
+        loopChildNode(node, checkStatus, checked);
+        loopParentNode(node, checkStatus, checked);
+    } else {
+        if(checked) {
+            checkStatus[node.key] = {
+                checked: checked
+            };
+        } else {
+            delete checkStatus[node.key];
+        }
+    }
     return checkStatus;
 }
 export default function VirtualSelect(props) {
@@ -146,15 +153,8 @@ export default function VirtualSelect(props) {
     const [ expandStatus, setExpandStatus ] = useState({});
     const [ loadedStatus, setLoadedStatus ] = useState({});
     const [ list, setList] = useState([]);
-    const [ visible, setVisible ] = useState(false);
-    const { data, loadData, checkable=false } = props;
+    const { data, loadData, checkable, cascade, single } = props;
     const asyncLoad = !!loadData;
-    const onToggle = function(state) {
-        setVisible(state != void 0 ? state : !visible);
-    };
-    const closeDropPanel = useCallback(function() {
-        setVisible(false);
-    }, []);
     const toggleLoadingState = function(node, state) {
         if(state) {
             loadedStatus[node.key] = state;
@@ -185,21 +185,14 @@ export default function VirtualSelect(props) {
             expandStatus[node.key] = status;
         }
         setExpandStatus({...expandStatus});
-        if(asyncLoad) {
-            const status = loadedStatus[node.key];
-            if(status === nodeStatus.unfold || status === loadStatus.loaded) {
-                return;
-            }
+        // 异步加载节点 && 节点未加载成功
+        if(asyncLoad && loadedStatus[node.key] != loadStatus.loaded) {
             asyncLoadNode(node);
         } else {
             handleSelectNode(node);
         }
     };
     const handleSelectNode = function(node) {
-        // 非 checkbox 模式不递归记录选中状态
-        if(!checkable) {
-            return
-        }
         const state = checkStatus[node.key];
 
         if(!state) {
@@ -209,16 +202,23 @@ export default function VirtualSelect(props) {
         }
     };
     const selectNode = function(node, checked) {
-        const newCheckStatus = handleNodeStatus(node, checkStatus, checked);
+        if(single) {
+            const newCheckStatus = {};
+            if(checked) {
+                newCheckStatus[node.key] = {
+                    checked: checked
+                };
+            }
+            setCheckStatus({...newCheckStatus});
+        } else {
+            const newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade);
 
-        setCheckStatus({...newCheckStatus});
+            setCheckStatus({...newCheckStatus});
+        }
     };
     const config = {
-        width: "400px",
-        allowClear: false,
-        showExpander: true,
+        cascade: cascade,
         checkable: checkable,
-        visible: visible,
         checkStatus: checkStatus,
         expandStatus: expandStatus,
         loadedStatus: loadedStatus,
@@ -231,31 +231,13 @@ export default function VirtualSelect(props) {
         // 从展示列表中添加或移除对应节点的子节点
         setList(treeToList(data, expandStatus));
     }, [expandStatus, data]);
-    useEffect(function() {
-        document.addEventListener("click", closeDropPanel);
-        return function() {
-            document.removeEventListener(closeDropPanel);
-        };
-    }, []);
 
     return (
-        <div onClick={(e) => {e.nativeEvent.stopImmediatePropagation()}}>
+        <div className="sm-vtree">
             <ConfigContext.Provider value={config}>
-                <Selector 
-                    onToggle={onToggle}
+                <VirtualList
+                    list={list}
                 />
-                { 
-                    visible && (
-                        <Dropdown>
-                            <div className="search-area">
-                                <Input.Search />
-                            </div>
-                            <VirtualList
-                                list={list}
-                            />
-                        </Dropdown>
-                    )
-                }
             </ConfigContext.Provider>
         </div>
     );

@@ -24,7 +24,6 @@ function VirtualList(props) {
     return (
         <div 
             className={cls}
-            style={{ height: "200px" }}
         >
             <AutoSizer>
                 {({height, width}) => (

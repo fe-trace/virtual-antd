@@ -6,10 +6,9 @@
 | checkable | 是否显示多选框 |
 | loadData | 节点展开回调，第一次回调，返回promise通知节点子节点数据加载完成 |
 | cascade | 节点选中操作是否级联 |
-| dropdown | 展示方式: 列表和下拉选择, 默认列表 |
+| single | 是否是单选，单选和级联不能同时为真 |
 | showSearch | 是否展示搜索框 |
-| allowClear | 是否展示清除按钮 |
-| labelFormate | 定制回填样式 |
+| expandAll | 展开所有节点 |
 | onChange | 选择数据后回调 |
 
 ### 列表数据项（Item）
