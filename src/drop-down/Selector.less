@@ -1,0 +1,39 @@
+.sm-selector {
+    border: 1px solid #d9d9d9;
+    display: block;
+    padding: 0 8px;
+    position: relative;
+    line-height: 30px;
+    color: #bfbfbf;
+    cursor: pointer;
+    position: relative;
+    width: 100%;
+
+    .sm-selector-expand {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .sm-selector-closer {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        .sm-selector-icon {
+            display: inline-block;
+            transition: all 300ms;
+            
+            &.rotate {
+                transform-origin: center;
+                transform: rotateZ(180deg);
+            }
+        }
+    }
+
+    &:hover, &.active {
+        border-color: #40a9ff;
+    }
+}

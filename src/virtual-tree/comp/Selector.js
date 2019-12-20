@@ -7,7 +7,6 @@ import "./Selector.less";
 function preventDefault(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Clicked! But prevent default.');
 }
 
 function Selector(props) {
@@ -32,7 +31,7 @@ function Selector(props) {
             {
                 config.showExpander && (
                     <span className="sm-selector-closer">
-                        <Icon type="down" rotate={ config.visible ? 180 : 0} />
+                        <Icon type="down" />
                     </span>
                 )
             }

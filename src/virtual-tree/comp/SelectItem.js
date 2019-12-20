@@ -16,7 +16,7 @@ function SelectItem(props) {
     });
     const itemCls = cn({
         'select-item': true,
-        'active': !config.multiple && checkStatus.checked,
+        'active': checkStatus.checked && !config.checkable,
         'disabled': data.disabled
     });
     const handleFold = function() {
@@ -35,8 +35,8 @@ function SelectItem(props) {
     const handleSelect = function() {
         let checked = checkStatus.checked || false;
 
-        // 多选 && 节点部分选中 点击时选中节点
-        if(config.multiple && checkStatus.indeterminate) {
+        // 节点部分选中 点击时选中节点
+        if(checkStatus.indeterminate) {
             checked = false;
         }
         config.selectNode && config.selectNode(data, !checked);
@@ -78,6 +78,7 @@ function SelectItem(props) {
                 {
                     config.checkable && (
                         <Checkbox
+                            className="ic-checkbox"
                             disabled={ data.disabled }
                             checked={ checkStatus.checked }
                             indeterminate={ checkStatus.indeterminate }
