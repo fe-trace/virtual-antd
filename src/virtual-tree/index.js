@@ -195,6 +195,11 @@ export default function VirtualSelect(props) {
     const handleSelectNode = function(node) {
         const state = checkStatus[node.key];
 
+        // 单选时不需要级联操作节点
+        if(single) {
+            return;
+        }
+
         if(!state) {
             selectNode(node, false);
         } else if(state.checked && !state.indeterminate) {
@@ -203,7 +208,7 @@ export default function VirtualSelect(props) {
     };
     const selectNode = function(node, checked) {
         if(single) {
-            const newCheckStatus = {};
+            let newCheckStatus = {};
             if(checked) {
                 newCheckStatus[node.key] = {
                     checked: checked
