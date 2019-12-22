@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-import VirtualSelect from './virtual-tree/index.js';
+import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
 
 const data = new Array(10).fill(0).map(function(item, index) {
@@ -42,14 +42,14 @@ function Layout(props) {
                 }
                 setData([...list]);
                 resolve();
-            }, 1000);
+            }, 3000);
         });
     }
     return (
         <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
-            <VirtualSelect 
+            <VirtualTree 
                 data={list} 
-                single={true}
+                // single={true}
                 cascade={false}
                 checkable={true}
                 loadData={loadData} 

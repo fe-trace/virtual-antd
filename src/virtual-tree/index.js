@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus, loadStatus } from './comp/constant.js';
@@ -149,19 +149,20 @@ function handleNodeStatus(node, checkStatus, checked, cascade) {
     return checkStatus;
 }
 export default function VirtualSelect(props) {
+    const loadedStatus = useRef({});
     const [ checkStatus, setCheckStatus ] = useState({});
     const [ expandStatus, setExpandStatus ] = useState({});
-    const [ loadedStatus, setLoadedStatus ] = useState({});
     const [ list, setList] = useState([]);
     const { data, loadData, checkable, cascade, single } = props;
     const asyncLoad = !!loadData;
     const toggleLoadingState = function(node, state) {
+        const status = loadedStatus.current;
         if(state) {
-            loadedStatus[node.key] = state;
+            status[node.key] = state;
         } else {
-            delete loadedStatus[node.key];
+            delete lstatus[node.key];
         }
-        setLoadedStatus({...loadedStatus});
+        loadedStatus.current = {...status};
     };
     const asyncLoadNode = function(node) {
         toggleLoadingState(node, loadStatus.loading);
@@ -186,7 +187,7 @@ export default function VirtualSelect(props) {
         }
         setExpandStatus({...expandStatus});
         // 异步加载节点 && 节点未加载成功
-        if(asyncLoad && loadedStatus[node.key] != loadStatus.loaded) {
+        if(asyncLoad && loadedStatus.current[node.key] != loadStatus.loaded) {
             asyncLoadNode(node);
         } else {
             handleSelectNode(node);
@@ -226,7 +227,7 @@ export default function VirtualSelect(props) {
         checkable: checkable,
         checkStatus: checkStatus,
         expandStatus: expandStatus,
-        loadedStatus: loadedStatus,
+        loadedStatus: loadedStatus.current,
         expandNode: expandNode,
         selectNode: selectNode,
         asyncLoad: asyncLoad
