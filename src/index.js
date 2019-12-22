@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { render } from 'react-dom';
 import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
+import VirtualSelect from './virtual-select/index.js';
 
 const data = new Array(10).fill(0).map(function(item, index) {
     return {
         key: `g-${index}`,
-        label: `grande-${index}`
+        label: `grande-${index}`,
+        // selectable: false
+        // disabled: true
     }
 });
 data.map(function(item, gIndex) {
@@ -47,20 +50,26 @@ function Layout(props) {
     }
     return (
         <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
-            <VirtualTree 
+            {/* <VirtualTree 
                 data={list} 
                 single={true}
                 cascade={true}
-                checkable={true}
+                // checkable={true}
+                loadData={loadData} 
+                onChange={(data) => console.log(data)}
+            /> */}
+            {/* <DropDown>
+                <div>abc</div>
+            </DropDown> */}
+            <VirtualSelect 
+                data={list} 
+                single={true}
+                cascade={true}
+                // checkable={true}
                 loadData={loadData} 
                 onChange={(data) => console.log(data)}
             />
         </div>
-        // <div style={{ margin: '20px', width: '300px' }}>
-        //     <DropDown>
-        //         <div>abc</div>
-        //     </DropDown>
-        // </div>
     );
 }
 

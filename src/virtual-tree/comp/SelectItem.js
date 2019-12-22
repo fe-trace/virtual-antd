@@ -17,7 +17,8 @@ function SelectItem(props) {
     const itemCls = cn({
         'select-item': true,
         'active': checkStatus.checked && !config.checkable,
-        'disabled': data.disabled
+        'unselected': data.selectable === false,
+        'disabled': data.disabled,
     });
     const handleFold = function() {
         config.expandNode && config.expandNode(data, nodeStatus.fold);
@@ -33,6 +34,10 @@ function SelectItem(props) {
         config.selectNode && config.selectNode(data, checked);
     };
     const handleSelect = function() {
+        // 节点禁用 || 节点不可选择
+        if(data.disabled || data.selectable === false) {
+            return;
+        }
         let checked = checkStatus.checked || false;
 
         // 节点部分选中 点击时选中节点
@@ -47,33 +52,37 @@ function SelectItem(props) {
             className={cls}
             style={{ paddingLeft: data.level * 18 }}
         >
-            <span className="ic-expand">
-                { 
-                    (
-                        // 异步加载 && 加载中 && 显示加载中
-                        config.asyncLoad && loadedStatus === loadStatus.loading && (
-                            <Icon type="loading" />
-                        )
-                    ) || (
-                        // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
-                        data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
-                    ) && (
-                        status === nodeStatus.fold && (
-                            // 节点展开
-                            <Icon 
-                                type="minus-circle" 
-                                onClick={ handleUnFold } 
-                            />
-                        ) || (
-                            // 节点闭合
-                            <Icon 
-                                type="plus-circle" 
-                                onClick={ handleFold } 
-                            />
-                        )
-                    )
-                }
-            </span>
+            { 
+                config.checkable && (
+                    <span className="ic-expand">
+                        { 
+                            (
+                                // 异步加载 && 加载中 && 显示加载中
+                                config.asyncLoad && loadedStatus === loadStatus.loading && (
+                                    <Icon type="loading" />
+                                )
+                            ) || (
+                                // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
+                                data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
+                            ) && (
+                                status === nodeStatus.fold && (
+                                    // 节点展开
+                                    <Icon 
+                                        type="minus-circle" 
+                                        onClick={ handleUnFold } 
+                                    />
+                                ) || (
+                                    // 节点闭合
+                                    <Icon 
+                                        type="plus-circle" 
+                                        onClick={ handleFold } 
+                                    />
+                                )
+                            )
+                        }
+                    </span>
+                )
+            }
             <span className={itemCls}>
                 {
                     config.checkable && (
