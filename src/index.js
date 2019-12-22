@@ -49,10 +49,11 @@ function Layout(props) {
         <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
             <VirtualTree 
                 data={list} 
-                // single={true}
-                cascade={false}
+                single={true}
+                cascade={true}
                 checkable={true}
                 loadData={loadData} 
+                onChange={(data) => console.log(data)}
             />
         </div>
         // <div style={{ margin: '20px', width: '300px' }}>

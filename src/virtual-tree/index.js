@@ -45,7 +45,8 @@ function loopChildNode(node, checkStatus, checked) {
         
         if(checked) {
             checkStatus[item.key] = {
-                checked: checked
+                checked: checked,
+                label: item.label
             };
         } else {
             delete checkStatus[item.key];
@@ -97,18 +98,19 @@ function loopParentNode(node, checkStatus, checked) {
     if(checked) {
         if(checkAll) {
             checkStatus[pNode.key] = {
-                checked: true
+                checked: true,
+                label: pNode.label
             };
         } else {
             checkStatus[pNode.key] = {
-                checked: true,
+                // checked: true,
                 indeterminate: true
             };
         }
     } else {
         if(hasCheck) {
             checkStatus[pNode.key] = {
-                checked: true,
+                // checked: true,
                 indeterminate: true
             };
         } else {
@@ -140,7 +142,8 @@ function handleNodeStatus(node, checkStatus, checked, cascade) {
     } else {
         if(checked) {
             checkStatus[node.key] = {
-                checked: checked
+                checked: checked,
+                label: node.label
             };
         } else {
             delete checkStatus[node.key];
@@ -148,12 +151,29 @@ function handleNodeStatus(node, checkStatus, checked, cascade) {
     }
     return checkStatus;
 }
+function handleSelectData(checkStatus) {
+    const keys = Object.keys(checkStatus);
+    const data = [];
+
+    for(let i=0,len=keys.length; i<len; i++) {
+        const key = keys[i];
+        const item = checkStatus[key]
+
+        if(item.checked) {
+            data.push({
+                key: key,
+                value: item.label
+            });
+        }
+    }
+    return data;
+}
 export default function VirtualSelect(props) {
     const loadedStatus = useRef({});
     const [ checkStatus, setCheckStatus ] = useState({});
     const [ expandStatus, setExpandStatus ] = useState({});
     const [ list, setList] = useState([]);
-    const { data, loadData, checkable, cascade, single } = props;
+    const { data, loadData, checkable, cascade, single, onChange } = props;
     const asyncLoad = !!loadData;
     const toggleLoadingState = function(node, state) {
         const status = loadedStatus.current;
@@ -202,25 +222,29 @@ export default function VirtualSelect(props) {
         }
 
         if(!state) {
-            selectNode(node, false);
+            selectNode(node, false, true);
         } else if(state.checked && !state.indeterminate) {
-            selectNode(node, true);
+            selectNode(node, true, true);
         }
     };
-    const selectNode = function(node, checked) {
+    const selectNode = function(node, checked, isHandle) {
+        // isHandle：手动触发选择事件 
+        let newCheckStatus = {};
         if(single) {
-            let newCheckStatus = {};
             if(checked) {
                 newCheckStatus[node.key] = {
-                    checked: checked
+                    checked: checked,
+                    label: node.label
                 };
             }
             setCheckStatus({...newCheckStatus});
         } else {
-            const newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade);
+            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade);
 
             setCheckStatus({...newCheckStatus});
         }
+        // 选中时才触发，懒加载回调时不触发
+        !isHandle && onChange && onChange(handleSelectData(newCheckStatus));
     };
     const config = {
         cascade: cascade,

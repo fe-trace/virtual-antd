@@ -55,8 +55,8 @@ function SelectItem(props) {
                             <Icon type="loading" />
                         )
                     ) || (
-                        // ( 有子节点 || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
-                        (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
+                        // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
+                        data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
                     ) && (
                         status === nodeStatus.fold && (
                             // 节点展开
