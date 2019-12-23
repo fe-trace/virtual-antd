@@ -12,12 +12,21 @@ function Selector(props) {
         'sm-selector-icon': true,
         'rotate': props.visible
     });
+    const { labels } = props;
+    let labelView = null;
+
+    if(labels && labels.length) {
+        labelView = labels.map((label, index) => (<Tag key={index} closable>{label.label}</Tag>));
+    } else {
+        labelView = (<span>{ props.placeholder || "请选择" }</span>);
+    }
+
     return (
         <div 
             className={cls}
         >
             {/* <span>{ props.placeholder || "请选择" }</span> */}
-            <Tag closable>Tag 1</Tag>
+            { labelView }
             <span className="sm-selector-closer">
                 <span className={iconCls}>
                     <Icon type="down" />

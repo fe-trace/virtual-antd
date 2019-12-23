@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import DropDown from './../drop-down/index.js';
 import VirtualTree from './../virtual-tree/index.js'
 
@@ -9,6 +9,7 @@ function VirtaulSelect(props) {
     newProps.onChange = function(data) {
         props.single && closeDropPanel && closeDropPanel();
         onChange && onChange(data);
+        props.handleSetLabel(data);
     };
     delete newProps.closeDropPanel;
     return (
@@ -19,10 +20,27 @@ function VirtaulSelect(props) {
 }
 
 export default memo(function(props) {
+    const [ labels, setLabels ] = useState(function() {
+        return {
+            list: [],
+            keys: []
+        };
+    });
+    const handleSetLabel = function(labelData) {
+        setLabels(labelData);
+    };
+
     return (
         <div className="sm-vselect">
-            <DropDown>
-                <VirtaulSelect {...props} />
+            <DropDown
+                labels={labels}
+                single={props.single}
+                maxTagCount={props.maxTagCount || 1}
+            >
+                <VirtaulSelect 
+                    {...props} 
+                    handleSetLabel={handleSetLabel}
+                />
             </DropDown>
         </div>
     );

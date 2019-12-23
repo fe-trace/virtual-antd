@@ -5,7 +5,7 @@ import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
 import VirtualSelect from './virtual-select/index.js';
 
-const data = new Array(10000).fill(0).map(function(item, index) {
+const data = new Array(100).fill(0).map(function(item, index) {
     return {
         key: `g-${index}`,
         label: `grande-${index}`,
@@ -50,7 +50,7 @@ function Layout(props) {
                 }
                 setData([...list]);
                 resolve();
-            }, 3000);
+            }, 500);
         });
     }
     
@@ -69,9 +69,9 @@ function Layout(props) {
                 <div>abc</div>
             </DropDown> */}
             <VirtualSelect 
-                data={list} 
-                single={true}
-                // cascade={true}
+                data={list}
+                // single={true}
+                cascade={true}
                 checkable={true}
                 loadData={loadData}
                 onChange={(data) => console.log(data)}

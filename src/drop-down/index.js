@@ -1,7 +1,59 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import cn from 'classnames';
-import Selector from './Selector.js';
+import { Icon, Tag } from 'antd';
 import "./Index.less";
+
+function labelView(props, handleRemove) {
+    const { labels, maxTagCount } = props;
+    const { list, keys } = labels;
+    const handleClick = function(e) {
+        e.stopPropagation();
+    };
+    let labelView = null;
+
+    if(list && list.length) {
+        if(props.single) {
+            const item = list[0];
+            labelView = (
+                <span 
+                    className="sm-label"
+                >
+                    { item.label }
+                </span>
+            );
+        } else {
+            const tempList = [...list];
+            const viewList = tempList.splice(0, maxTagCount);
+            labelView = (
+                <>
+                    { 
+                        viewList.map((item, index) => (
+                            <Tag 
+                                key={index}
+                                onClick={handleClick}
+                            >
+                                {item.label}
+                            </Tag>
+                        ))
+                    }
+                    { 
+                        tempList && tempList.length && (
+                            <Tag 
+                                key="all"
+                                onClick={handleClick}
+                            >
+                                {`+${tempList.length}...`}
+                            </Tag>
+                        ) || false 
+                    }
+                </>
+            );
+        }
+    } else {
+        labelView = (<span>{ props.placeholder || "请选择" }</span>);
+    }
+    return labelView;
+}
 
 function Dropdown(props) {
     const [ visible, setVisible ] = useState(props.visible || false);
@@ -10,12 +62,28 @@ function Dropdown(props) {
         "hidden": !visible,
         [props.wrapCls || ""]: true
     });
+    const selectCls = cn({
+        'sm-selector': true,
+        'active': visible
+    });
+    const iconCls = cn({
+        'sm-selector-icon': true,
+        'rotate': visible
+    });
     const onToggle = function(e) {
         setVisible(!visible);
     };
     const closeDropPanel = useCallback(function() {
         setVisible(false);
     }, []);
+    const handleClear = function(e) {
+        e.stopPropagation();
+    };
+    const handleRemove = function(payload) {
+        console.log("data: ", payload);  
+    };
+    const view = labelView(props, handleRemove);
+    
 
     useEffect(function() {
         document.addEventListener("click", closeDropPanel);
@@ -27,9 +95,23 @@ function Dropdown(props) {
     return (
         <div className="sm-dropdown" onClick={e => e.nativeEvent.stopImmediatePropagation()}>
             <div onClick={onToggle}>
-                <Selector
-                    visible={visible}
-                />
+                <div 
+                    className={selectCls}
+                >
+                    { view }
+                    <span className="sm-selector-closer">
+                        <span className={iconCls}>
+                            <Icon type="down" />
+                        </span>
+                    </span>
+                    {
+                        props.allowClear && (
+                            <span className="sm-selector-closer" onClick={handleClear}>
+                                <Icon type="close-circle" theme="filled" />
+                            </span>
+                        )
+                    }
+                </div>
             </div>
             <div 
                 className={cls}

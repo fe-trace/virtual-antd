@@ -36,6 +36,30 @@ function treeToList(data, expandStatus) {
     }
     return [ list, flatMap ];
 }
+function flatTree(data) {
+    const allList = [];
+    const source = data.map(item => ({
+        ...item,
+        parent: null
+    }));
+    const list = [...source];
+
+    while(list.length) {
+        const node = list.shift();
+
+        allList.push(node);
+        // 节点有子节点 && 节点展开，子节点需要展示
+        if(node.children && node.children.length) {
+            const children = node.children.map(item => ({
+                ...item,
+                parent: node.key,
+            }));
+
+            list.splice(0, 0, ...children);
+        }
+    }
+    return allList;
+}
 function loopChildNode(node, checkStatus, checked) {
     // 递归子节点设置状态
     const list = [node];
@@ -154,14 +178,7 @@ function handleSelectData(checkStatus, list) {
         // 选中节点取值列表
         keys: [],
     };
-    for(let i=0,len=keys.length; i<len; i++) {
-        const key = keys[i];
-        const item = checkStatus[key];
-
-        // if(item.checked) {
-        //     data.total = data.total + 1;
-        // }
-    }
+    
     for(let i=0,len=list.length; i<len; i++) {
         const item = list[i];
         const status = checkStatus[item.key];
@@ -169,10 +186,13 @@ function handleSelectData(checkStatus, list) {
 
         if(status && status.checked) {
             // 没有父节点 || 父节不是全选
-            (!pState || !pState.checked) && data.list.push({
-                key: item.key,
-                label: item.label
+            (!pState || (pState && !pState.checked)) && data.list.push({
+                label: item.label,
+                key: item.key
             });
+            if(status.checked) {
+                data.keys.push(item.key);
+            }
         }
     }
     return data;
@@ -183,6 +203,8 @@ class VirtualTree extends PureComponent {
         this.state = {
             // 展示数据列表
             list: [],
+            // 扁平数据列表
+            allList: [],
             // 数据扁平集合（按层级分类）
             flatData: {},
             // 节点选中状态
@@ -247,20 +269,19 @@ class VirtualTree extends PureComponent {
         const { single } = this.props;
         const state = checkStatus[node.key];
 
+        this.initList();
         // 单选时不需要级联操作节点
         if(single) {
             return;
         }
-
         // 当前展开的节点选中，递归选中其子节点
         if(state && state.checked) {
             this.selectNode(node, true, true);
         }
-        this.initList();
     };
     selectNode = (node, checked, isHandle) => {
         // isHandle：手动触发选择事件
-        const { checkStatus, flatData } = this.state;
+        const { allList, checkStatus, flatData } = this.state;
         const { cascade, single, onChange } = this.props;
         let newCheckStatus = {};
         if(single) {
@@ -276,15 +297,17 @@ class VirtualTree extends PureComponent {
             checkStatus: {...newCheckStatus}
         });
         // 选中时才触发，懒加载回调时不触发
-        // !isHandle && onChange && onChange(handleSelectData(newCheckStatus, list));
+        !isHandle && onChange && onChange(handleSelectData(newCheckStatus, allList));
     };
     initList = () => {
         const { data } = this.props;
         const { expandStatus } = this.state;
         const [ list, flatData ] = treeToList(data, expandStatus);
-
+        const allList = flatTree(data);
+        
         this.setState({
             list: list,
+            allList: allList,
             flatData: flatData
         });
     }
