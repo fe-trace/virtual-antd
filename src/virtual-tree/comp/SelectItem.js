@@ -53,35 +53,33 @@ function SelectItem(props) {
             style={{ paddingLeft: data.level * 18 }}
         >
             { 
-                config.checkable && (
-                    <span className="ic-expand">
-                        { 
-                            (
-                                // 异步加载 && 加载中 && 显示加载中
-                                config.asyncLoad && loadedStatus === loadStatus.loading && (
-                                    <Icon type="loading" />
-                                )
-                            ) || (
-                                // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
-                                data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
-                            ) && (
-                                status === nodeStatus.fold && (
-                                    // 节点展开
-                                    <Icon 
-                                        type="minus-circle" 
-                                        onClick={ handleUnFold } 
-                                    />
-                                ) || (
-                                    // 节点闭合
-                                    <Icon 
-                                        type="plus-circle" 
-                                        onClick={ handleFold } 
-                                    />
-                                )
+                config.asyncLoad && (<span className="ic-expand">
+                    { 
+                        (
+                           // 加载中(显示加载中)
+                           loadedStatus === loadStatus.loading && (
+                                <Icon type="loading" />
                             )
-                        }
-                    </span>
-                )
+                        ) || (
+                            // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
+                            data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
+                        ) && (
+                            status === nodeStatus.fold && (
+                                // 节点展开
+                                <Icon 
+                                    type="minus-circle" 
+                                    onClick={ handleUnFold } 
+                                />
+                            ) || (
+                                // 节点闭合
+                                <Icon 
+                                    type="plus-circle" 
+                                    onClick={ handleFold } 
+                                />
+                            )
+                        )
+                    }
+                </span>)
             }
             <span className={itemCls}>
                 {

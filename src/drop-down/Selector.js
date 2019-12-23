@@ -16,13 +16,13 @@ function Selector(props) {
         <div 
             className={cls}
         >
-            <span>{ props.placeholder || "请选择" }</span>
+            {/* <span>{ props.placeholder || "请选择" }</span> */}
+            <Tag closable>Tag 1</Tag>
             <span className="sm-selector-closer">
                 <span className={iconCls}>
                     <Icon type="down" />
                 </span>
             </span>
-            {/* <Tag closable>Tag 1</Tag> */}
             {
                 props.allowClear && (
                     <span className="sm-selector-closer" onClick={e => e.stopPropagation()}>

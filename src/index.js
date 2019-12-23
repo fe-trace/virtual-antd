@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom';
+import { Input } from 'antd';
 import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
 import VirtualSelect from './virtual-select/index.js';
 
-const data = new Array(10).fill(0).map(function(item, index) {
+const data = new Array(10000).fill(0).map(function(item, index) {
     return {
         key: `g-${index}`,
         label: `grande-${index}`,
@@ -30,6 +31,10 @@ data.map(function(item, gIndex) {
 });
 function Layout(props) {
     const [ list, setData ] = useState(data);
+    const [ text, setText ] = useState("");
+    const handleInput = function(e) {
+        setText(e.target.value);
+    };
     function loadData(node) {
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
@@ -48,8 +53,10 @@ function Layout(props) {
             }, 3000);
         });
     }
+    
     return (
         <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
+            {/* <Input onChange={handleInput} /> */}
             {/* <VirtualTree 
                 data={list} 
                 single={true}
@@ -63,10 +70,10 @@ function Layout(props) {
             </DropDown> */}
             <VirtualSelect 
                 data={list} 
-                single={true}
+                // single={true}
                 cascade={true}
-                // checkable={true}
-                loadData={loadData} 
+                checkable={true}
+                loadData={loadData}
                 onChange={(data) => console.log(data)}
             />
         </div>

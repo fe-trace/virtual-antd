@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus, loadStatus } from './comp/constant.js';
 import './Index.less';
 
-// 数据扁平集合，根据节点等级保存数据
-let flatMap = {};
-function treeToList(data, expandStatus) {
-    flatMap = {};
+function treeToList(data, expandStatus, flatData) {
+    const flatMap = {};
     const list = [];
     const source = data.map(item => ({
         ...item,
@@ -21,6 +19,7 @@ function treeToList(data, expandStatus) {
         const node = source.shift();
 
         list.push(node);
+        // 节点有子节点 && 节点展开，子节点需要展示
         if(node.children && node.children.length && expandStatus[node.key] === nodeStatus.fold) {
             const level = node.level + 1;
             const children = node.children.map(item => ({
@@ -29,11 +28,13 @@ function treeToList(data, expandStatus) {
                 parent: node.key,
                 dataRef: item
             }));
+
             flatMap[level] = flatMap[level] || [];
-            flatMap[level].push(...Object.assign(children));
+            flatMap[level].push(...children);
             source.splice(0, 0, ...children);
         }
     }
+    flatData.current = flatMap;
     return list;
 }
 function loopChildNode(node, checkStatus, checked) {
@@ -45,8 +46,7 @@ function loopChildNode(node, checkStatus, checked) {
         
         if(checked) {
             checkStatus[item.key] = {
-                checked: checked,
-                label: item.label
+                checked: checked
             };
         } else {
             delete checkStatus[item.key];
@@ -56,7 +56,7 @@ function loopChildNode(node, checkStatus, checked) {
         }
     }
 }
-function loopParentNode(node, checkStatus, checked) {
+function loopParentNode(node, checkStatus, checked, flatMap) {
     // 递归父节点设置状态
     const pId = node.parent;
     if(!pId) {
@@ -98,19 +98,16 @@ function loopParentNode(node, checkStatus, checked) {
     if(checked) {
         if(checkAll) {
             checkStatus[pNode.key] = {
-                checked: true,
-                label: pNode.label
+                checked: true
             };
         } else {
             checkStatus[pNode.key] = {
-                // checked: true,
                 indeterminate: true
             };
         }
     } else {
         if(hasCheck) {
             checkStatus[pNode.key] = {
-                // checked: true,
                 indeterminate: true
             };
         } else {
@@ -118,9 +115,10 @@ function loopParentNode(node, checkStatus, checked) {
         }
     }
     // 设置父节点的父节点选中效果
-    loopParentNode(pNode, checkStatus, checked);
+    loopParentNode(pNode, checkStatus, checked, flatMap);
 }
-function handleNodeStatus(node, checkStatus, checked, cascade) {
+function handleNodeStatus(node, checkStatus, checked, cascade, flatMap) {
+    console.log("checkStatus: ", checkStatus);
     /**
      * 处理节点的选中状态
      * 选中节点：
@@ -138,12 +136,11 @@ function handleNodeStatus(node, checkStatus, checked, cascade) {
     */
     if(cascade) {
         loopChildNode(node, checkStatus, checked);
-        loopParentNode(node, checkStatus, checked);
+        loopParentNode(node, checkStatus, checked, flatMap);
     } else {
         if(checked) {
             checkStatus[node.key] = {
-                checked: checked,
-                label: node.label
+                checked: checked
             };
         } else {
             delete checkStatus[node.key];
@@ -151,28 +148,43 @@ function handleNodeStatus(node, checkStatus, checked, cascade) {
     }
     return checkStatus;
 }
-function handleSelectData(checkStatus) {
+function handleSelectData(checkStatus, list) {
     const keys = Object.keys(checkStatus);
-    const data = [];
-
+    const data = {
+        // 选中节点展示项列表
+        list: [],
+        // 选中节点取值列表
+        keys: [],
+    };
     for(let i=0,len=keys.length; i<len; i++) {
         const key = keys[i];
-        const item = checkStatus[key]
+        const item = checkStatus[key];
 
-        if(item.checked) {
-            data.push({
-                key: key,
-                value: item.label
+        // if(item.checked) {
+        //     data.total = data.total + 1;
+        // }
+    }
+    for(let i=0,len=list.length; i<len; i++) {
+        const item = list[i];
+        const status = checkStatus[item.key];
+        const pState = checkStatus[item.parent];
+
+        if(status && status.checked) {
+            // 没有父节点 || 父节不是全选
+            (!pState || !pState.checked) && data.list.push({
+                key: item.key,
+                label: item.label
             });
         }
     }
     return data;
 }
-export default function VirtualSelect(props) {
+function VirtualTree(props) {
+    const flatData = useRef({}); 
     const loadedStatus = useRef({});
     const [ checkStatus, setCheckStatus ] = useState({});
     const [ expandStatus, setExpandStatus ] = useState({});
-    const [ list, setList] = useState([]);
+    const [ list, setList ] = useState([]);
     const { data, loadData, checkable, cascade, single, onChange } = props;
     const asyncLoad = !!loadData;
     const toggleLoadingState = function(node, state) {
@@ -180,7 +192,7 @@ export default function VirtualSelect(props) {
         if(state) {
             status[node.key] = state;
         } else {
-            delete lstatus[node.key];
+            delete status[node.key];
         }
         loadedStatus.current = {...status};
     };
@@ -221,9 +233,8 @@ export default function VirtualSelect(props) {
             return;
         }
 
-        if(!state) {
-            selectNode(node, false, true);
-        } else if(state.checked && !state.indeterminate) {
+        // 当前展开的节点选中，递归选中其子节点
+        if(state && state.checked) {
             selectNode(node, true, true);
         }
     };
@@ -233,18 +244,17 @@ export default function VirtualSelect(props) {
         if(single) {
             if(checked) {
                 newCheckStatus[node.key] = {
-                    checked: checked,
-                    label: node.label
+                    checked: checked
                 };
             }
             setCheckStatus({...newCheckStatus});
         } else {
-            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade);
+            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade, flatData.current);
 
             setCheckStatus({...newCheckStatus});
         }
         // 选中时才触发，懒加载回调时不触发
-        !isHandle && onChange && onChange(handleSelectData(newCheckStatus));
+        !isHandle && onChange && onChange(handleSelectData(newCheckStatus, list));
     };
     const config = {
         cascade: cascade,
@@ -259,7 +269,10 @@ export default function VirtualSelect(props) {
 
     useEffect(function() {
         // 从展示列表中添加或移除对应节点的子节点
-        setList(treeToList(data, expandStatus));
+        console.time("start");
+        const list = treeToList(data, expandStatus, flatData);
+        console.timeEnd("start");
+        setList(list);
     }, [expandStatus, data]);
 
     return (
@@ -272,3 +285,5 @@ export default function VirtualSelect(props) {
         </div>
     );
 }
+
+export default memo(VirtualTree);

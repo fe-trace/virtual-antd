@@ -7,6 +7,7 @@ function Dropdown(props) {
     const [ visible, setVisible ] = useState(props.visible || false);
     const cls = cn({
         "sm-dropdown-cont": true,
+        "hidden": !visible,
         [props.wrapCls || ""]: true
     });
     const onToggle = function(e) {
@@ -30,22 +31,18 @@ function Dropdown(props) {
                     visible={visible}
                 />
             </div>
-            {
-                visible && (
-                    <div 
-                        className={cls}
-                        style={{
-                            width: props.width || null
-                        }}
-                    >
-                        { 
-                            React.cloneElement(props.children, {
-                                closeDropPanel: closeDropPanel
-                            }) 
-                        }
-                    </div>
-                )
-            }
+            <div 
+                className={cls}
+                style={{
+                    width: props.width || null
+                }}
+            >
+                { 
+                    React.cloneElement(props.children, {
+                        closeDropPanel: closeDropPanel
+                    }) 
+                }
+            </div>
         </div>
     );
 }
