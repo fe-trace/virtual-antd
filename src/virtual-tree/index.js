@@ -171,7 +171,6 @@ function handleNodeStatus(node, checkStatus, checked, cascade, flatMap) {
     return checkStatus;
 }
 function handleSelectData(checkStatus, list) {
-    const keys = Object.keys(checkStatus);
     const data = {
         // 选中节点展示项列表
         list: [],
@@ -316,7 +315,7 @@ class VirtualTree extends PureComponent {
     }
     render() {
         const { list, asyncLoad, checkStatus, expandStatus, loadedStatus } = this.state;
-        const { data, loadData, checkable, cascade, single, onChange } = this.props;
+        const { checkable, cascade } = this.props;
         const config = {
             cascade: cascade,
             checkable: checkable,

@@ -8,8 +8,8 @@ function VirtaulSelect(props) {
 
     newProps.onChange = function(data) {
         props.single && closeDropPanel && closeDropPanel();
-        onChange && onChange(data);
         props.handleSetLabel(data);
+        onChange && onChange(data);
     };
     delete newProps.closeDropPanel;
     return (

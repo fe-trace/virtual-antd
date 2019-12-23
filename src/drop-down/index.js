@@ -6,15 +6,24 @@ import "./Index.less";
 function labelView(props, handleRemove) {
     const { labels, maxTagCount } = props;
     const { list, keys } = labels;
-    const handleClick = function(e) {
+    const handleClose = function(e, payload) {
         e.stopPropagation();
+        e.preventDefault();
+        e.nativeEvent.stopImmediatePropagation();
+
+        if(payload.type === 'all') {
+            handleRemove(keys.splice(maxTagCount));
+        } else {
+            handleRemove([payload.data.key]);
+        }
     };
-    let labelView = null;
+    const leftCount = keys.length - maxTagCount;
+    let viewComp = null;
 
     if(list && list.length) {
         if(props.single) {
             const item = list[0];
-            labelView = (
+            viewComp = (
                 <span 
                     className="sm-label"
                 >
@@ -24,35 +33,43 @@ function labelView(props, handleRemove) {
         } else {
             const tempList = [...list];
             const viewList = tempList.splice(0, maxTagCount);
-            labelView = (
-                <>
+            viewComp = (
+                <span>
                     { 
-                        viewList.map((item, index) => (
+                        viewList.map(item => (
                             <Tag 
-                                key={index}
-                                onClick={handleClick}
+                                closable
+                                key={item.key}
+                                onClose={(e) => handleClose(e, {
+                                    type: "item",
+                                    data: item
+                                })}
                             >
                                 {item.label}
                             </Tag>
                         ))
                     }
                     { 
-                        tempList && tempList.length && (
-                            <Tag 
-                                key="all"
-                                onClick={handleClick}
-                            >
-                                {`+${tempList.length}...`}
-                            </Tag>
+                        leftCount && (
+                            <span>
+                                <Tag 
+                                    closable
+                                    onClose={(e) => handleClose(e, {
+                                        type: "all"
+                                    })}
+                                >
+                                    {`+${leftCount}...`}
+                                </Tag>
+                            </span>
                         ) || false 
                     }
-                </>
+                </span>
             );
         }
     } else {
-        labelView = (<span>{ props.placeholder || "请选择" }</span>);
+        viewComp = (<span>{ props.placeholder || "请选择" }</span>);
     }
-    return labelView;
+    return viewComp;
 }
 
 function Dropdown(props) {
@@ -80,9 +97,9 @@ function Dropdown(props) {
         e.stopPropagation();
     };
     const handleRemove = function(payload) {
-        console.log("data: ", payload);  
+        console.log("data: ", payload);
     };
-    const view = labelView(props, handleRemove);
+    const viewComp = labelView(props, handleRemove);
     
 
     useEffect(function() {
@@ -98,7 +115,7 @@ function Dropdown(props) {
                 <div 
                     className={selectCls}
                 >
-                    { view }
+                    { viewComp }
                     <span className="sm-selector-closer">
                         <span className={iconCls}>
                             <Icon type="down" />
