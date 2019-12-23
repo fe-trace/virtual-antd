@@ -5,6 +5,7 @@
     ],
     "plugins": [
         "@babel/plugin-transform-runtime",
+        "@babel/plugin-proposal-class-properties",
         ["import", { 
             "libraryName": "lodash",
             // 子模块对应文件夹

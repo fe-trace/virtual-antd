@@ -1,10 +1,10 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { PureComponent, memo, useState, useEffect, useRef } from 'react';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus, loadStatus } from './comp/constant.js';
 import './Index.less';
 
-function treeToList(data, expandStatus, flatData) {
+function treeToList(data, expandStatus) {
     const flatMap = {};
     const list = [];
     const source = data.map(item => ({
@@ -34,8 +34,7 @@ function treeToList(data, expandStatus, flatData) {
             source.splice(0, 0, ...children);
         }
     }
-    flatData.current = flatMap;
-    return list;
+    return [ list, flatMap ];
 }
 function loopChildNode(node, checkStatus, checked) {
     // 递归子节点设置状态
@@ -118,7 +117,6 @@ function loopParentNode(node, checkStatus, checked, flatMap) {
     loopParentNode(pNode, checkStatus, checked, flatMap);
 }
 function handleNodeStatus(node, checkStatus, checked, cascade, flatMap) {
-    console.log("checkStatus: ", checkStatus);
     /**
      * 处理节点的选中状态
      * 选中节点：
@@ -179,53 +177,74 @@ function handleSelectData(checkStatus, list) {
     }
     return data;
 }
-function VirtualTree(props) {
-    const flatData = useRef({}); 
-    const loadedStatus = useRef({});
-    const [ checkStatus, setCheckStatus ] = useState({});
-    const [ expandStatus, setExpandStatus ] = useState({});
-    const [ list, setList ] = useState([]);
-    const { data, loadData, checkable, cascade, single, onChange } = props;
-    const asyncLoad = !!loadData;
-    const toggleLoadingState = function(node, state) {
-        const status = loadedStatus.current;
+class VirtualTree extends PureComponent {
+    constructor(props) {
+        super(props);
+        this.state = {
+            // 展示数据列表
+            list: [],
+            // 数据扁平集合（按层级分类）
+            flatData: {},
+            // 节点选中状态
+            checkStatus: {},
+            // 节点加载状态
+            loadedStatus: {},
+            // 节点展开状态
+            expandStatus: {},
+            // 异步加载
+            asyncLoad: !!props.loadData,
+        };
+    }
+    
+    toggleLoadingState = (node, state) => {
+        const { loadedStatus: status } = this.state;
+        
         if(state) {
             status[node.key] = state;
         } else {
             delete status[node.key];
         }
-        loadedStatus.current = {...status};
-    };
-    const asyncLoadNode = function(node) {
-        toggleLoadingState(node, loadStatus.loading);
-        loadData && loadData(node).then(() => {
-            toggleLoadingState(node, loadStatus.loaded);
-            handleSelectNode(node.dataRef);
-        }).catch(e => {
-            toggleLoadingState(node, false);
+        this.setState({
+            loadedStatus: {...status}
         });
     };
-    const expandNode = function(node, status) {
+    asyncLoadNode = (node) => {
+        const { loadData } = this.props;
+        this.toggleLoadingState(node, loadStatus.loading);
+        loadData && loadData(node).then(() => {
+            this.toggleLoadingState(node, loadStatus.loaded);
+            this.handleSelectNode(node.dataRef);
+        }).catch(e => {
+            this.toggleLoadingState(node, false);
+        });
+    };
+    expandNode = (node, status) => {
         // 同步加载
         // 展开节点：设置节点展开样式，添加展开节点对应的子节点到显示列表中
         // 闭合节点：设置节点闭合样式，在显示列表中移除闭合几点对应的子节点
         // 异步加载
         // 展开加点：加载节点下子节点，设置节点展开样式，添加展开节点对应的子节点到显示列表中
         // 闭合节点：设置节点闭合样式，在显示列表中移除闭合几点对应的子节点
+        const { expandStatus, loadedStatus, asyncLoad } = this.state;
+
         if(status === nodeStatus.unfold) {
             delete expandStatus[node.key];
         } else {
             expandStatus[node.key] = status;
         }
-        setExpandStatus({...expandStatus});
+        this.setState({
+            expandStatus: {...expandStatus}
+        });
         // 异步加载节点 && 节点未加载成功
-        if(asyncLoad && loadedStatus.current[node.key] != loadStatus.loaded) {
-            asyncLoadNode(node);
+        if(asyncLoad && loadedStatus[node.key] != loadStatus.loaded) {
+            this.asyncLoadNode(node);
         } else {
-            handleSelectNode(node);
+            this.handleSelectNode(node);
         }
     };
-    const handleSelectNode = function(node) {
+    handleSelectNode = (node) => {
+        const { checkStatus } = this.state;
+        const { single } = this.props;
         const state = checkStatus[node.key];
 
         // 单选时不需要级联操作节点
@@ -235,11 +254,14 @@ function VirtualTree(props) {
 
         // 当前展开的节点选中，递归选中其子节点
         if(state && state.checked) {
-            selectNode(node, true, true);
+            this.selectNode(node, true, true);
         }
+        this.initList();
     };
-    const selectNode = function(node, checked, isHandle) {
-        // isHandle：手动触发选择事件 
+    selectNode = (node, checked, isHandle) => {
+        // isHandle：手动触发选择事件
+        const { checkStatus, flatData } = this.state;
+        const { cascade, single, onChange } = this.props;
         let newCheckStatus = {};
         if(single) {
             if(checked) {
@@ -247,43 +269,52 @@ function VirtualTree(props) {
                     checked: checked
                 };
             }
-            setCheckStatus({...newCheckStatus});
         } else {
-            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade, flatData.current);
-
-            setCheckStatus({...newCheckStatus});
+            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade, flatData);
         }
+        this.setState({
+            checkStatus: {...newCheckStatus}
+        });
         // 选中时才触发，懒加载回调时不触发
-        !isHandle && onChange && onChange(handleSelectData(newCheckStatus, list));
+        // !isHandle && onChange && onChange(handleSelectData(newCheckStatus, list));
     };
-    const config = {
-        cascade: cascade,
-        checkable: checkable,
-        checkStatus: checkStatus,
-        expandStatus: expandStatus,
-        loadedStatus: loadedStatus.current,
-        expandNode: expandNode,
-        selectNode: selectNode,
-        asyncLoad: asyncLoad
-    };
+    initList = () => {
+        const { data } = this.props;
+        const { expandStatus } = this.state;
+        const [ list, flatData ] = treeToList(data, expandStatus);
 
-    useEffect(function() {
-        // 从展示列表中添加或移除对应节点的子节点
-        console.time("start");
-        const list = treeToList(data, expandStatus, flatData);
-        console.timeEnd("start");
-        setList(list);
-    }, [expandStatus, data]);
-
-    return (
-        <div className="sm-vtree">
-            <ConfigContext.Provider value={config}>
-                <VirtualList
-                    list={list}
-                />
-            </ConfigContext.Provider>
-        </div>
-    );
+        this.setState({
+            list: list,
+            flatData: flatData
+        });
+    }
+    componentDidMount() {
+        this.initList();
+    }
+    render() {
+        const { list, asyncLoad, checkStatus, expandStatus, loadedStatus } = this.state;
+        const { data, loadData, checkable, cascade, single, onChange } = this.props;
+        const config = {
+            cascade: cascade,
+            checkable: checkable,
+            checkStatus: checkStatus,
+            expandStatus: expandStatus,
+            loadedStatus: loadedStatus,
+            expandNode: this.expandNode,
+            selectNode: this.selectNode,
+            asyncLoad: asyncLoad
+        };
+    
+        return (
+            <div className="sm-vtree">
+                <ConfigContext.Provider value={config}>
+                    <VirtualList
+                        list={list}
+                    />
+                </ConfigContext.Provider>
+            </div>
+        );
+    }
 }
 
 export default memo(VirtualTree);

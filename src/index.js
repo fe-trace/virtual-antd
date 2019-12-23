@@ -70,8 +70,8 @@ function Layout(props) {
             </DropDown> */}
             <VirtualSelect 
                 data={list} 
-                // single={true}
-                cascade={true}
+                single={true}
+                // cascade={true}
                 checkable={true}
                 loadData={loadData}
                 onChange={(data) => console.log(data)}
