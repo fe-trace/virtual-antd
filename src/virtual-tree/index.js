@@ -279,8 +279,8 @@ class VirtualTree extends PureComponent {
         }
     };
     selectNode = (node, checked, isHandle) => {
-        // isHandle：手动触发选择事件
-        const { allList, checkStatus, flatData } = this.state;
+        // isHandle 手动触发
+        const { allList, checkStatus, expandStatus, flatData } = this.state;
         const { cascade, single, onChange } = this.props;
         let newCheckStatus = {};
         if(single) {
@@ -295,8 +295,12 @@ class VirtualTree extends PureComponent {
         this.setState({
             checkStatus: {...newCheckStatus}
         });
-        // 选中时才触发，懒加载回调时不触发
-        !isHandle && onChange && onChange(handleSelectData(newCheckStatus, allList));
+        
+        // 手动触发 && 节点闭合 => 不触发 onChange 事件
+        if(isHandle && !expandStatus[node.key]) {
+            return
+        }
+        onChange && onChange(handleSelectData(newCheckStatus, allList));
     };
     initList = () => {
         const { data } = this.props;
