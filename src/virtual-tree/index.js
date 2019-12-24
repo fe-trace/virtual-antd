@@ -199,7 +199,7 @@ function handleSelectData(checkStatus, list) {
 function findNode(allList, key) {
     let target = null;
 
-    for(let i=0,lne=allList.length; i<len; i++) {
+    for(let i=0,len=allList.length; i<len; i++) {
         const node = allList[i];
 
         if(node.key === key) {
@@ -211,23 +211,19 @@ function findNode(allList, key) {
 }
 function setCheckStatus(keys, checked, cascade, flatMap, allList) {
     const checkStatus = {};
+
+    if(!keys || keys.length === 0) {
+        return checkStatus;
+    }
     for(let i=0,len=keys.length; i<len; i++) {
         const key = keys[i];
-        const node = findNode(findNode, key);
+        const node = findNode(allList, key);
 
         if(node) {
             handleNodeStatus(node, checkStatus, checked, cascade, flatMap);
         }
     }
     return checkStatus;
-} 
-function deleteCheckStatus(checkStatus, removeKeys) {
-    const status = {...checkStatus};
-    for(let i=0,len=removeKeys.length; i<len; i++) {
-        const key = removeKeys[i];
-        delete status[key]
-    }
-    return status;
 }
 class VirtualTree extends PureComponent {
     constructor(props) {
@@ -252,10 +248,10 @@ class VirtualTree extends PureComponent {
         };
     }
     static getDerivedStateFromProps(nextProps, prevState) {
-        if(nextProps._checkKeys != prevState._checkKeys) {
+        if(nextProps.value != prevState.value) {
             return {
-                checkStatus: deleteCheckStatus(prevState.checkStatus, nextProps._checkKeys),
-                _checkKeys: nextProps._checkKeys
+                checkStatus: setCheckStatus(nextProps.value, true, nextProps.cascade, prevState.flatData, prevState.allList),
+                value: nextProps.value
             }
         }
         return null;
@@ -343,7 +339,8 @@ class VirtualTree extends PureComponent {
         if(isHandle && !expandStatus[node.key]) {
             return
         }
-        onChange && onChange(handleSelectData(newCheckStatus, allList));
+        const data = handleSelectData(newCheckStatus, allList);
+        onChange && onChange(data.keys, data.list);
     };
     initList = () => {
         const { data } = this.props;

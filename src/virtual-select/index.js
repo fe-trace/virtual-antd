@@ -6,10 +6,10 @@ function VirtaulSelect(props) {
     const { onChange, closeDropPanel } = props;
     const newProps = { ...props };
 
-    newProps.onChange = function(data) {
+    newProps.onChange = function(keys, list) {
         props.single && closeDropPanel && closeDropPanel();
-        props.handleSetLabel(data);
-        onChange && onChange(data);
+        props.handleSetLabel(list);
+        onChange && onChange(keys);
     };
     delete newProps.closeDropPanel;
     return (
@@ -20,25 +20,25 @@ function VirtaulSelect(props) {
 }
 
 export default memo(function(props) {
-    const [ count, setCount ] = useState(0);
     const [ labels, setLabels ] = useState(function() {
-        return {
-            list: [],
-            keys: []
-        };
+        return [];
     });
-    const [ removeKeys, setRemoveKeys ] = useState(function() {
-        return []
+    const [ value, setValue ] = useState(function() {
+        return props.value || [];
     });
     const handleSetLabel = function(labelData) {
         setLabels(labelData);
     };
     const removeLabel = function(keyList) {
-        setLabels({
-            list: [],
-            keys: []
-        });
-        setRemoveKeys(keyList);
+        for(let len=labels.length,i=len-1; i>=0; i--) {
+            const label = labels[i];
+
+            if(!keyList.includes(label.key)) {
+                labels.splice(i, 1);
+            }
+        }
+        setLabels([...labels]);
+        setValue(keyList);
     };
 
     return (
@@ -53,7 +53,7 @@ export default memo(function(props) {
             >
                 <VirtaulSelect 
                     {...props}
-                    _checkKeys={removeKeys}
+                    value={value}
                     handleSetLabel={handleSetLabel}
                 />
             </DropDown>

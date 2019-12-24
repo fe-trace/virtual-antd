@@ -59,9 +59,9 @@ function Layout(props) {
             {/* <Input onChange={handleInput} /> */}
             {/* <VirtualTree 
                 data={list} 
-                single={true}
+                // single={true}
                 cascade={true}
-                // checkable={true}
+                checkable={true}
                 loadData={loadData} 
                 onChange={(data) => console.log(data)}
             /> */}

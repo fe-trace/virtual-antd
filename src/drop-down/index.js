@@ -11,23 +11,21 @@ function preventDefault(e) {
 
 function LabelView(props) {
     const { labels, maxTagCount } = props;
-    const { list, keys } = labels;
     const handleClose = function(e, payload) {
         preventDefault(e);
         
-        // 
+        // 剔除删除的节点，剩余的节点重新进行选中
         if(payload.type === 'all') {
-            props.handleSetKey(keys.splice(0, maxTagCount));
+            props.handleSetKey(labels.splice(0, maxTagCount));
         } else {
-            props.handleSetKey(keys.filter(key => key != payload.data.key));
+            props.handleSetKey(labels.filter(item => item.key != payload.key));
         }
     };
-    const leftCount = keys.length - maxTagCount;
     let viewComp = null;
 
-    if(list && list.length) {
+    if(labels && labels.length) {
         if(props.single) {
-            const item = list[0];
+            const item = labels[0];
             viewComp = (
                 <span 
                     className="sm-label"
@@ -36,7 +34,7 @@ function LabelView(props) {
                 </span>
             );
         } else {
-            const tempList = [...list];
+            const tempList = [...labels];
             const viewList = tempList.splice(0, maxTagCount);
             viewComp = (
                 <span>
@@ -48,7 +46,7 @@ function LabelView(props) {
                                 onClick={preventDefault}
                                 onClose={(e) => handleClose(e, {
                                     type: "item",
-                                    data: item
+                                    key: item.key
                                 })}
                             >
                                 {item.label}
@@ -56,7 +54,7 @@ function LabelView(props) {
                         ))
                     }
                     { 
-                        (leftCount > 0) && (
+                        (tempList && tempList.length) && (
                             <span>
                                 <Tag 
                                     closable
@@ -65,7 +63,7 @@ function LabelView(props) {
                                         type: "all"
                                     })}
                                 >
-                                    {`+${leftCount}...`}
+                                    {`+${tempList.length}...`}
                                 </Tag>
                             </span>
                         ) || false 
@@ -103,9 +101,9 @@ function Dropdown(props) {
     const handleClear = function(e) {
         e.stopPropagation();
     };
-    const handleSetKey = function(keys) {
-        console.log("keys: ", keys);
-        // props.removeLabel && props.removeLabel(payload);
+    const handleSetKey = function(list) {
+        const keys = list.map(item => item.key);
+        props.removeLabel && props.removeLabel(keys);
     };
 
     useEffect(function() {
@@ -115,7 +113,6 @@ function Dropdown(props) {
         };
     }, []);
     
-    console.log("count: ", props.index);
     return (
         <div className="sm-dropdown" onClick={e => e.nativeEvent.stopImmediatePropagation()}>
             <div onClick={onToggle}>
@@ -123,7 +120,8 @@ function Dropdown(props) {
                     className={selectCls}
                 >
                     <LabelView
-                        labels={props.labels} 
+                        single={props.single}
+                        labels={[...props.labels]} 
                         maxTagCount={props.maxTagCount}
                         handleSetKey={handleSetKey}
                     />
