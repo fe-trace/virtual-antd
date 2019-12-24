@@ -50,7 +50,7 @@ function labelView(props, handleRemove) {
                         ))
                     }
                     { 
-                        leftCount && (
+                        (leftCount > 0) && (
                             <span>
                                 <Tag 
                                     closable
@@ -97,7 +97,7 @@ function Dropdown(props) {
         e.stopPropagation();
     };
     const handleRemove = function(payload) {
-        console.log("data: ", payload);
+        props.removeLabel && props.removeLabel(payload);
     };
     const viewComp = labelView(props, handleRemove);
     

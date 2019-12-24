@@ -26,8 +26,14 @@ export default memo(function(props) {
             keys: []
         };
     });
+    const [ removeKeys, setRemoveKeys ] = useState(function() {
+        return []
+    });
     const handleSetLabel = function(labelData) {
         setLabels(labelData);
+    };
+    const removeLabel = function(keyList) {
+        setRemoveKeys(keyList);
     };
 
     return (
@@ -35,10 +41,14 @@ export default memo(function(props) {
             <DropDown
                 labels={labels}
                 single={props.single}
+                allowClear={props.allowClear}
+                placeholder={props.placeholder}
                 maxTagCount={props.maxTagCount || 1}
+                removeLabel={removeLabel}
             >
                 <VirtaulSelect 
-                    {...props} 
+                    {...props}
+                    _checkKeys={removeKeys}
                     handleSetLabel={handleSetLabel}
                 />
             </DropDown>

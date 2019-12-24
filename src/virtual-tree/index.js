@@ -1,4 +1,4 @@
-import React, { PureComponent, memo, useState, useEffect, useRef } from 'react';
+import React, { PureComponent } from 'react';
 import VirtualList from './comp/VirtualList.js';
 import ConfigContext from './context/config';
 import { nodeStatus, loadStatus } from './comp/constant.js';
@@ -196,6 +196,14 @@ function handleSelectData(checkStatus, list) {
     }
     return data;
 }
+function deleteCheckStatus(checkStatus, removeKeys) {
+    const status = {...checkStatus};
+    for(let i=0,len=removeKeys.length; i<len; i++) {
+        const key = removeKeys[i];
+        delete status[key]
+    }
+    return status;
+}
 class VirtualTree extends PureComponent {
     constructor(props) {
         super(props);
@@ -208,6 +216,8 @@ class VirtualTree extends PureComponent {
             flatData: {},
             // 节点选中状态
             checkStatus: {},
+            // 内部属性，用于移除节点选中状态
+            _checkKeys: [],
             // 节点加载状态
             loadedStatus: {},
             // 节点展开状态
@@ -216,7 +226,15 @@ class VirtualTree extends PureComponent {
             asyncLoad: !!props.loadData,
         };
     }
-    
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if(nextProps._checkKeys != prevState._checkKeys) {
+            return {
+                checkStatus: deleteCheckStatus(prevState.checkStatus, nextProps._checkKeys),
+                _checkKeys: nextProps._checkKeys
+            }
+        }
+        return null;
+    }
     toggleLoadingState = (node, state) => {
         const { loadedStatus: status } = this.state;
         
@@ -343,4 +361,4 @@ class VirtualTree extends PureComponent {
     }
 }
 
-export default memo(VirtualTree);
+export default VirtualTree;
