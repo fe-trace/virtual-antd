@@ -20,6 +20,7 @@ function VirtaulSelect(props) {
 }
 
 export default memo(function(props) {
+    const [ count, setCount ] = useState(0);
     const [ labels, setLabels ] = useState(function() {
         return {
             list: [],
@@ -33,6 +34,10 @@ export default memo(function(props) {
         setLabels(labelData);
     };
     const removeLabel = function(keyList) {
+        setLabels({
+            list: [],
+            keys: []
+        });
         setRemoveKeys(keyList);
     };
 

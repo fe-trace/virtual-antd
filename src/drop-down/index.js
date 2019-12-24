@@ -3,18 +3,23 @@ import cn from 'classnames';
 import { Icon, Tag } from 'antd';
 import "./Index.less";
 
-function labelView(props, handleRemove) {
+function preventDefault(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
+}
+
+function LabelView(props) {
     const { labels, maxTagCount } = props;
     const { list, keys } = labels;
     const handleClose = function(e, payload) {
-        e.stopPropagation();
-        e.preventDefault();
-        e.nativeEvent.stopImmediatePropagation();
-
+        preventDefault(e);
+        
+        // 
         if(payload.type === 'all') {
-            handleRemove(keys.splice(maxTagCount));
+            props.handleSetKey(keys.splice(0, maxTagCount));
         } else {
-            handleRemove([payload.data.key]);
+            props.handleSetKey(keys.filter(key => key != payload.data.key));
         }
     };
     const leftCount = keys.length - maxTagCount;
@@ -40,6 +45,7 @@ function labelView(props, handleRemove) {
                             <Tag 
                                 closable
                                 key={item.key}
+                                onClick={preventDefault}
                                 onClose={(e) => handleClose(e, {
                                     type: "item",
                                     data: item
@@ -54,6 +60,7 @@ function labelView(props, handleRemove) {
                             <span>
                                 <Tag 
                                     closable
+                                    onClick={preventDefault}
                                     onClose={(e) => handleClose(e, {
                                         type: "all"
                                     })}
@@ -96,11 +103,10 @@ function Dropdown(props) {
     const handleClear = function(e) {
         e.stopPropagation();
     };
-    const handleRemove = function(payload) {
-        props.removeLabel && props.removeLabel(payload);
+    const handleSetKey = function(keys) {
+        console.log("keys: ", keys);
+        // props.removeLabel && props.removeLabel(payload);
     };
-    const viewComp = labelView(props, handleRemove);
-    
 
     useEffect(function() {
         document.addEventListener("click", closeDropPanel);
@@ -109,13 +115,18 @@ function Dropdown(props) {
         };
     }, []);
     
+    console.log("count: ", props.index);
     return (
         <div className="sm-dropdown" onClick={e => e.nativeEvent.stopImmediatePropagation()}>
             <div onClick={onToggle}>
                 <div 
                     className={selectCls}
                 >
-                    { viewComp }
+                    <LabelView
+                        labels={props.labels} 
+                        maxTagCount={props.maxTagCount}
+                        handleSetKey={handleSetKey}
+                    />
                     <span className="sm-selector-closer">
                         <span className={iconCls}>
                             <Icon type="down" />

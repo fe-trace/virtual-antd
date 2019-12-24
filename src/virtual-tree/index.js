@@ -40,6 +40,7 @@ function flatTree(data) {
     const allList = [];
     const source = data.map(item => ({
         ...item,
+        level: 0,
         parent: null
     }));
     const list = [...source];
@@ -52,6 +53,7 @@ function flatTree(data) {
         if(node.children && node.children.length) {
             const children = node.children.map(item => ({
                 ...item,
+                level: node.level + 1,
                 parent: node.key,
             }));
 
@@ -189,13 +191,36 @@ function handleSelectData(checkStatus, list) {
                 label: item.label,
                 key: item.key
             });
-            if(status.checked) {
-                data.keys.push(item.key);
-            }
+            data.keys.push(item.key);
         }
     }
     return data;
 }
+function findNode(allList, key) {
+    let target = null;
+
+    for(let i=0,lne=allList.length; i<len; i++) {
+        const node = allList[i];
+
+        if(node.key === key) {
+            target = node;
+            break;
+        }
+    }
+    return target;
+}
+function setCheckStatus(keys, checked, cascade, flatMap, allList) {
+    const checkStatus = {};
+    for(let i=0,len=keys.length; i<len; i++) {
+        const key = keys[i];
+        const node = findNode(findNode, key);
+
+        if(node) {
+            handleNodeStatus(node, checkStatus, checked, cascade, flatMap);
+        }
+    }
+    return checkStatus;
+} 
 function deleteCheckStatus(checkStatus, removeKeys) {
     const status = {...checkStatus};
     for(let i=0,len=removeKeys.length; i<len; i++) {
