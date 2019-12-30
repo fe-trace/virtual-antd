@@ -372,6 +372,11 @@ class VirtualTree extends PureComponent {
         if(prevProps.expandedKeys != this.props.expandedKeys) {
             const { expandedKeys } = this.props;
             const { allList } = this.state;
+            if(expandedKeys && !expandedKeys[0]) {
+                return this.setState({
+                    expandStatus: {}
+                });
+            }
             for(let i=0,len=expandedKeys.length; i<len; i++) {
                 const node = findNode(allList, expandedKeys[i]);
                 this.expandNode(node, nodeStatus.fold);
