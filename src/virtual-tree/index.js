@@ -41,7 +41,8 @@ function flatTree(data) {
     const source = data.map(item => ({
         ...item,
         level: 0,
-        parent: null
+        parent: null,
+        dataRef: item
     }));
     const list = [...source];
 
@@ -55,6 +56,7 @@ function flatTree(data) {
                 ...item,
                 level: node.level + 1,
                 parent: node.key,
+                dataRef: item
             }));
 
             list.splice(0, 0, ...children);
@@ -356,6 +358,25 @@ class VirtualTree extends PureComponent {
     }
     componentDidMount() {
         this.initList();
+    }
+    componentDidUpdate(prevProps) {
+        if(prevProps.checkedKeys != this.props.checkedKeys) {
+            console.log("checkedKeys: ", prevProps.checkedKeys, this.props.checkedKeys);
+            const { checkedKeys, cascade } = this.props;
+            const { flatData, allList } = this.state;
+            const checkStatus = setCheckStatus(checkedKeys, true, cascade, flatData, allList);
+            this.setState({
+                checkStatus
+            });
+        }
+        if(prevProps.expandedKeys != this.props.expandedKeys) {
+            const { expandedKeys } = this.props;
+            const { allList } = this.state;
+            for(let i=0,len=expandedKeys.length; i<len; i++) {
+                const node = findNode(allList, expandedKeys[i]);
+                this.expandNode(node, nodeStatus.fold);
+            }
+        }
     }
     render() {
         const { list, asyncLoad, checkStatus, expandStatus, loadedStatus } = this.state;

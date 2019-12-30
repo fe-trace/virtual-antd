@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
 import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
 import VirtualSelect from './virtual-select/index.js';
@@ -30,11 +30,19 @@ data.map(function(item, gIndex) {
     // });
 });
 function Layout(props) {
+    const [ checkedKeys, setCheckedKeys ] = useState([]);
+    const [ expandedKeys, setExpandedKeys ] = useState([]);
     const [ list, setData ] = useState(data);
     const [ text, setText ] = useState("");
     const handleInput = function(e) {
         setText(e.target.value);
     };
+    const handleSearch = function(val) {
+        setCheckedKeys(val.split(","));
+    }
+    const handleExpand = function(val) {
+        setExpandedKeys(val.split(","));
+    }
     function loadData(node) {
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
@@ -57,25 +65,34 @@ function Layout(props) {
     return (
         <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
             {/* <Input onChange={handleInput} /> */}
-            {/* <VirtualTree 
+            <Input.Search 
+                onSearch={handleSearch}
+            />
+            <Input.Search 
+                onSearch={handleExpand}
+            />
+            <VirtualTree 
                 data={list} 
                 // single={true}
+                checkedKeys={checkedKeys}
+                expandedKeys={expandedKeys}
                 cascade={true}
                 checkable={true}
                 loadData={loadData} 
                 onChange={(data) => console.log(data)}
-            /> */}
+            />
             {/* <DropDown>
                 <div>abc</div>
             </DropDown> */}
-            <VirtualSelect 
+            {/* <VirtualSelect 
                 data={list}
                 // single={true}
                 cascade={true}
                 checkable={true}
                 loadData={loadData}
+                maxTagCount={2}
                 onChange={(data) => console.log(data)}
-            />
+            /> */}
         </div>
     );
 }
