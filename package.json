@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "jack": "./src/test.js"
+  },
   "scripts": {
     "test": "cross-env NODE_ENV=development node ./demo/test.js",
     "debug": "cross-env DEBUG='1' node ./demo/debug.js",
-    "dev": "webpack-dev-server --config=webpack.config.dev.js"
+    "dev": "webpack-dev-server --config=webpack.config.dev.js",
+    "build": "echo build",
+    "release": "echo release"
   },
   "repository": {
     "type": "git",
