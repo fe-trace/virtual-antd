@@ -63,7 +63,7 @@ function Layout(props) {
     }
     
     return (
-        <div style={{ margin: '20px', width: '300px', height: '400px', border: '1px solid #f1f1f1' }}>
+        <div style={{ margin: '20px', width: '300px', height: '400px' }}>
             {/* <Input onChange={handleInput} /> */}
             <Input.Search 
                 onSearch={handleSearch}
