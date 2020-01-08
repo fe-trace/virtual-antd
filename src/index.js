@@ -67,9 +67,11 @@ function Layout(props) {
             {/* <Input onChange={handleInput} /> */}
             <Input.Search 
                 onSearch={handleSearch}
+                placeholder={"选中节点"}
             />
             <Input.Search 
                 onSearch={handleExpand}
+                placeholder={"展开节点"}
             />
             <VirtualTree 
                 data={list} 

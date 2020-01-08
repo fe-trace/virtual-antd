@@ -13,7 +13,6 @@ function treeToList(data, expandStatus) {
         parent: null,
         dataRef: item
     }));
-    flatMap[0] = [...source];
     
     while(source.length) {
         const node = source.shift();
@@ -29,12 +28,10 @@ function treeToList(data, expandStatus) {
                 dataRef: item
             }));
 
-            flatMap[level] = flatMap[level] || [];
-            flatMap[level].push(...children);
             source.splice(0, 0, ...children);
         }
     }
-    return [ list, flatMap ];
+    return list;
 }
 function flatTree(data) {
     const allList = [];
@@ -83,24 +80,14 @@ function loopChildNode(node, checkStatus, checked) {
         }
     }
 }
-function loopParentNode(node, checkStatus, checked, flatMap) {
+function loopParentNode(node, checkStatus, checked, allList) {
     // 递归父节点设置状态
     const pId = node.parent;
     if(!pId) {
         // 没有父节点
         return ;
     }
-    // 拿到父节点的层级
-    const level = node.level - 1;
-    const nodes = flatMap[level];
-    let pNode = null;
-    // 查找父节点
-    for(let i=0,len=nodes.length; i<len; i++) {
-        if(nodes[i].key === pId) {
-            pNode = nodes[i];
-            break; 
-        }
-    }
+    let pNode = findNode(allList, pId);
     if(!pNode) {
         return;
     }
@@ -142,9 +129,9 @@ function loopParentNode(node, checkStatus, checked, flatMap) {
         }
     }
     // 设置父节点的父节点选中效果
-    loopParentNode(pNode, checkStatus, checked, flatMap);
+    loopParentNode(pNode, checkStatus, checked, allList);
 }
-function handleNodeStatus(node, checkStatus, checked, cascade, flatMap) {
+function handleNodeStatus(node, checkStatus, checked, cascade, allList) {
     /**
      * 处理节点的选中状态
      * 选中节点：
@@ -162,7 +149,7 @@ function handleNodeStatus(node, checkStatus, checked, cascade, flatMap) {
     */
     if(cascade) {
         loopChildNode(node, checkStatus, checked);
-        loopParentNode(node, checkStatus, checked, flatMap);
+        loopParentNode(node, checkStatus, checked, allList);
     } else {
         if(checked) {
             checkStatus[node.key] = {
@@ -211,7 +198,7 @@ function findNode(allList, key) {
     }
     return target;
 }
-function setCheckStatus(keys, checked, cascade, flatMap, allList) {
+function setCheckStatus(keys, checked, cascade, allList) {
     const checkStatus = {};
 
     if(!keys || keys.length === 0) {
@@ -222,7 +209,7 @@ function setCheckStatus(keys, checked, cascade, flatMap, allList) {
         const node = findNode(allList, key);
 
         if(node) {
-            handleNodeStatus(node, checkStatus, checked, cascade, flatMap);
+            handleNodeStatus(node, checkStatus, checked, cascade, allList);
         }
     }
     return checkStatus;
@@ -235,12 +222,8 @@ class VirtualTree extends PureComponent {
             list: [],
             // 扁平数据列表
             allList: [],
-            // 数据扁平集合（按层级分类）
-            flatData: {},
             // 节点选中状态
             checkStatus: {},
-            // 内部属性，用于移除节点选中状态
-            _checkKeys: [],
             // 节点加载状态
             loadedStatus: {},
             // 节点展开状态
@@ -248,15 +231,6 @@ class VirtualTree extends PureComponent {
             // 异步加载
             asyncLoad: !!props.loadData,
         };
-    }
-    static getDerivedStateFromProps(nextProps, prevState) {
-        if(nextProps.value != prevState.value) {
-            return {
-                checkStatus: setCheckStatus(nextProps.value, true, nextProps.cascade, prevState.flatData, prevState.allList),
-                value: nextProps.value
-            }
-        }
-        return null;
     }
     toggleLoadingState = (node, state) => {
         const { loadedStatus: status } = this.state;
@@ -321,7 +295,7 @@ class VirtualTree extends PureComponent {
     };
     selectNode = (node, checked, isHandle) => {
         // isHandle 手动触发
-        const { allList, checkStatus, expandStatus, flatData } = this.state;
+        const { allList, checkStatus, expandStatus } = this.state;
         const { cascade, single, onChange } = this.props;
         let newCheckStatus = {};
         if(single) {
@@ -331,7 +305,7 @@ class VirtualTree extends PureComponent {
                 };
             }
         } else {
-            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade, flatData);
+            newCheckStatus = handleNodeStatus(node, checkStatus, checked, cascade, allList);
         }
         this.setState({
             checkStatus: {...newCheckStatus}
@@ -347,13 +321,12 @@ class VirtualTree extends PureComponent {
     initList = () => {
         const { data } = this.props;
         const { expandStatus } = this.state;
-        const [ list, flatData ] = treeToList(data, expandStatus);
+        const list = treeToList(data, expandStatus);
         const allList = flatTree(data);
         
         this.setState({
             list: list,
-            allList: allList,
-            flatData: flatData
+            allList: allList
         });
     }
     componentDidMount() {
@@ -361,10 +334,9 @@ class VirtualTree extends PureComponent {
     }
     componentDidUpdate(prevProps) {
         if(prevProps.checkedKeys != this.props.checkedKeys) {
-            console.log("checkedKeys: ", prevProps.checkedKeys, this.props.checkedKeys);
             const { checkedKeys, cascade } = this.props;
-            const { flatData, allList } = this.state;
-            const checkStatus = setCheckStatus(checkedKeys, true, cascade, flatData, allList);
+            const { allList } = this.state;
+            const checkStatus = setCheckStatus(checkedKeys, true, cascade, allList);
             this.setState({
                 checkStatus
             });
@@ -379,7 +351,10 @@ class VirtualTree extends PureComponent {
             }
             for(let i=0,len=expandedKeys.length; i<len; i++) {
                 const node = findNode(allList, expandedKeys[i]);
-                this.expandNode(node, nodeStatus.fold);
+                
+                if(node) {
+                    this.expandNode(node, nodeStatus.fold);
+                }
             }
         }
     }
