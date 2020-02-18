@@ -21,10 +21,10 @@ function SelectItem(props) {
         'disabled': data.disabled,
     });
     const handleFold = function() {
-        config.expandNode && config.expandNode(data, nodeStatus.fold);
+        config.expandNode && config.expandNode(data, nodeStatus.unfold);
     };
     const handleUnFold = function() {
-        config.expandNode && config.expandNode(data, nodeStatus.unfold);
+        config.expandNode && config.expandNode(data, nodeStatus.fold);
     };
     const handleChange = function(e) {
         let checked = e.target.checked;
@@ -56,15 +56,15 @@ function SelectItem(props) {
                 config.asyncLoad && (<span className="ic-expand">
                     { 
                         (
-                           // 加载中(显示加载中)
-                           loadedStatus === loadStatus.loading && (
+                            // 加载中(显示加载中)
+                            loadedStatus === loadStatus.loading && (
                                 <Icon type="loading" />
                             )
                         ) || (
                             // (节点是叶子节点 || 有子节点 || || (异步加载 && (节点不是加载中状态)) ) 显示节点展开/闭合状态
                             data.isLeaf || (data.children && data.children.length) || (config.asyncLoad && !loadedStatus)
                         ) && (
-                            status === nodeStatus.fold && (
+                            status === nodeStatus.unfold && (
                                 // 节点展开
                                 <Icon 
                                     type="minus-circle" 

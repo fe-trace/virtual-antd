@@ -5,7 +5,7 @@ import VirtualTree from './virtual-tree/index.js';
 import DropDown from './drop-down/index.js';
 import VirtualSelect from './virtual-select/index.js';
 
-const data = new Array(100).fill(0).map(function(item, index) {
+const data = new Array(10000).fill(0).map(function(item, index) {
     return {
         key: `g-${index}`,
         label: `grande-${index}`,
@@ -49,7 +49,7 @@ function Layout(props) {
                 if(/^p/.test(node.key) && false) {
 
                 } else {
-                    node.dataRef.children = new Array(10).fill(0).map(function(item, index) {
+                    node.dataRef.children = new Array(2).fill(0).map(function(item, index) {
                         return {
                             key: `p-${node.key}-${index}`,
                             label: `parent-${index}`

@@ -5,61 +5,42 @@ import { nodeStatus, loadStatus } from './comp/constant.js';
 import './Index.less';
 
 function treeToList(data, expandStatus) {
-    const flatMap = {};
     const list = [];
+    const allList = [];
     const source = data.map(item => ({
         ...item,
         level: 0,
+        isShow: true,
         parent: null,
         dataRef: item
     }));
     
     while(source.length) {
         const node = source.shift();
+        const isShow = node.isShow;
 
-        list.push(node);
-        // 节点有子节点 && 节点展开，子节点需要展示
-        if(node.children && node.children.length && expandStatus[node.key] === nodeStatus.fold) {
+        delete node.isShow;
+        // 需要展示的节点
+        if(isShow) {
+            list.push(node);
+        }
+        // 所有的节点
+        allList.push(node);
+        // 节点有子节点，计算子节点是否需要展示
+        if(node.children && node.children.length) {
             const level = node.level + 1;
             const children = node.children.map(item => ({
                 ...item,
                 level: level,
                 parent: node.key,
+                isShow: isShow && expandStatus[node.key] === nodeStatus.unfold,
                 dataRef: item
             }));
 
             source.splice(0, 0, ...children);
         }
     }
-    return list;
-}
-function flatTree(data) {
-    const allList = [];
-    const source = data.map(item => ({
-        ...item,
-        level: 0,
-        parent: null,
-        dataRef: item
-    }));
-    const list = [...source];
-
-    while(list.length) {
-        const node = list.shift();
-
-        allList.push(node);
-        // 节点有子节点 && 节点展开，子节点需要展示
-        if(node.children && node.children.length) {
-            const children = node.children.map(item => ({
-                ...item,
-                level: node.level + 1,
-                parent: node.key,
-                dataRef: item
-            }));
-
-            list.splice(0, 0, ...children);
-        }
-    }
-    return allList;
+    return [list, allList];
 }
 function loopChildNode(node, checkStatus, checked) {
     // 递归子节点设置状态
@@ -263,7 +244,7 @@ class VirtualTree extends PureComponent {
         // 闭合节点：设置节点闭合样式，在显示列表中移除闭合几点对应的子节点
         const { expandStatus, loadedStatus, asyncLoad } = this.state;
 
-        if(status === nodeStatus.unfold) {
+        if(status === nodeStatus.fold) {
             delete expandStatus[node.key];
         } else {
             expandStatus[node.key] = status;
@@ -321,8 +302,7 @@ class VirtualTree extends PureComponent {
     initList = () => {
         const { data } = this.props;
         const { expandStatus } = this.state;
-        const list = treeToList(data, expandStatus);
-        const allList = flatTree(data);
+        const [ list, allList ] = treeToList(data, expandStatus);
         
         this.setState({
             list: list,
@@ -353,7 +333,7 @@ class VirtualTree extends PureComponent {
                 const node = findNode(allList, expandedKeys[i]);
                 
                 if(node) {
-                    this.expandNode(node, nodeStatus.fold);
+                    this.expandNode(node, nodeStatus.unfold);
                 }
             }
         }
